@@ -22,11 +22,23 @@ export default function Auth() {
     setLoading(true);
 
     if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
-      } else {
-        navigate("/");
+      } else if (authData.user) {
+        // Check if user has admin role
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", authData.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        
+        if (roleData) {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
       }
     } else {
       const { error } = await supabase.auth.signUp({

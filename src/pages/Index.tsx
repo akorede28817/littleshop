@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import heroVideo from "@/assets/hero-video.mp4";
 
 export default function Index() {
   const { data: featuredProducts, isLoading: loadingFeatured } = useQuery({
@@ -46,8 +47,19 @@ export default function Index() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-background via-secondary/30 to-background py-24 md:py-32">
-        <div className="container mx-auto px-4 text-center">
+      <section className="relative overflow-hidden py-24 md:py-32">
+        {/* Video Background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover"
+        >
+          <source src={heroVideo} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
+        <div className="container relative mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <h1 className="font-display text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
               Discover <span className="text-primary">Premium</span> Products
