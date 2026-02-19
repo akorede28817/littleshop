@@ -10,14 +10,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Plus, Pencil, Trash2, Upload, X } from "lucide-react";
+import { useState, useRef } from "react";
 
 export default function AdminProducts() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: products } = useQuery({
     queryKey: ["admin-products"],
@@ -37,9 +39,42 @@ export default function AdminProducts() {
     },
   });
 
-  const [form, setForm] = useState({ name: "", description: "", price: "", compare_at_price: "", stock: "", category_id: "", featured: false, images: "" });
+  const [form, setForm] = useState({ name: "", description: "", price: "", compare_at_price: "", stock: "", category_id: "", featured: false, images: [] as string[] });
 
-  const resetForm = () => setForm({ name: "", description: "", price: "", compare_at_price: "", stock: "", category_id: "", featured: false, images: "" });
+  const resetForm = () => setForm({ name: "", description: "", price: "", compare_at_price: "", stock: "", category_id: "", featured: false, images: [] });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+
+    setUploadingImages(true);
+    const newUrls: string[] = [];
+
+    for (const file of Array.from(files)) {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+
+      const { error } = await supabase.storage
+        .from("product-images")
+        .upload(filePath, file);
+
+      if (error) {
+        toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from("product-images").getPublicUrl(filePath);
+      newUrls.push(publicUrl);
+    }
+
+    setForm((prev) => ({ ...prev, images: [...prev.images, ...newUrls] }));
+    setUploadingImages(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeImage = (index: number) => {
+    setForm((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -51,7 +86,7 @@ export default function AdminProducts() {
         stock: parseInt(form.stock) || 0,
         category_id: form.category_id || null,
         featured: form.featured,
-        images: form.images ? form.images.split(",").map((s) => s.trim()) : [],
+        images: form.images,
       };
       if (editing) {
         const { error } = await supabase.from("products").update(payload).eq("id", editing.id);
@@ -103,7 +138,7 @@ export default function AdminProducts() {
       name: p.name, description: p.description || "", price: String(p.price),
       compare_at_price: p.compare_at_price ? String(p.compare_at_price) : "",
       stock: String(p.stock), category_id: p.category_id || "", featured: p.featured,
-      images: p.images?.join(", ") || "",
+      images: p.images || [],
     });
     setOpen(true);
   };
@@ -145,7 +180,30 @@ export default function AdminProducts() {
                     </Select>
                   </div>
                 </div>
-                <div><Label>Image URLs (comma-separated)</Label><Input value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} /></div>
+
+                {/* Image Upload */}
+                <div>
+                  <Label>Product Images</Label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {form.images.map((url, i) => (
+                      <div key={i} className="relative h-20 w-20 overflow-hidden rounded-md border border-border">
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                        <button onClick={() => removeImage(i)} className="absolute right-0.5 top-0.5 rounded-full bg-destructive p-0.5 text-destructive-foreground">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImages}
+                      className="flex h-20 w-20 items-center justify-center rounded-md border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                    >
+                      {uploadingImages ? <span className="text-xs">...</span> : <Upload className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                </div>
+
                 <div className="flex items-center gap-2"><Switch checked={form.featured} onCheckedChange={(v) => setForm({ ...form, featured: v })} /><Label>Featured</Label></div>
                 <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="w-full">{editing ? "Update" : "Create"}</Button>
               </div>
@@ -170,7 +228,14 @@ export default function AdminProducts() {
             <TableBody>
               {products?.map((p) => (
                 <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 overflow-hidden rounded bg-secondary">
+                        <img src={p.images?.[0] || "/placeholder.svg"} alt="" className="h-full w-full object-cover" />
+                      </div>
+                      <span className="font-medium">{p.name}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{p.categories?.name || "—"}</TableCell>
                   <TableCell>${Number(p.price).toFixed(2)}</TableCell>
                   <TableCell>{p.stock}</TableCell>
