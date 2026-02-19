@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, Outlet, useLocation, Navigate } from "react-router-dom";
-import { User, Package, Heart, Star } from "lucide-react";
+import { User, Package, Camera } from "lucide-react";
 
 export default function Account() {
   const { user, loading } = useAuth();
@@ -43,6 +43,8 @@ export default function Account() {
 function ProfileSection() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -94,10 +96,77 @@ function ProfileSection() {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Please select an image file", variant: "destructive" });
+      return;
+    }
+
+    setUploading(true);
+    const fileExt = file.name.split(".").pop();
+    const filePath = `${user.id}/avatar.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ avatar_url: publicUrl })
+      .eq("user_id", user.id);
+
+    if (updateError) {
+      toast({ title: "Error saving avatar", description: updateError.message, variant: "destructive" });
+    } else {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({ title: "Avatar updated!" });
+    }
+    setUploading(false);
+  };
+
   return (
     <Card>
       <CardHeader><CardTitle>Profile Information</CardTitle></CardHeader>
       <CardContent>
+        {/* Avatar Upload */}
+        <div className="mb-6 flex items-center gap-4">
+          <div className="relative">
+            <div className="h-20 w-20 overflow-hidden rounded-full bg-secondary">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <User className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="absolute -bottom-1 -right-1 rounded-full bg-primary p-1.5 text-primary-foreground shadow-md hover:bg-primary/90 transition-colors"
+            >
+              <Camera className="h-3.5 w-3.5" />
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+          </div>
+          <div>
+            <p className="font-medium">{profile?.full_name || "Set your name"}</p>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
+            {uploading && <p className="text-xs text-primary">Uploading...</p>}
+          </div>
+        </div>
+
         <form onSubmit={(e) => { e.preventDefault(); update.mutate(); }} className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>Full Name</Label>

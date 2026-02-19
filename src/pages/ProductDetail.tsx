@@ -1,20 +1,23 @@
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { ShoppingCart, Heart, Star, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -35,8 +38,9 @@ export default function ProductDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reviews")
-        .select("*, profiles:user_id(full_name)")
-        .eq("product_id", id!);
+        .select("*, profiles:user_id(full_name, avatar_url)")
+        .eq("product_id", id!)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -47,14 +51,40 @@ export default function ProductDetail() {
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : null;
 
+  const submitReview = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("reviews").insert({
+        user_id: user!.id,
+        product_id: id!,
+        rating: reviewRating,
+        comment: reviewComment || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reviews", id] });
+      setReviewComment("");
+      setReviewRating(5);
+      toast({ title: "Review submitted!", description: "Thank you for your feedback." });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
   const addToCart = async () => {
     if (!user) { navigate("/auth"); return; }
     const { error } = await supabase.from("cart_items").upsert(
       { user_id: user.id, product_id: id!, quantity },
       { onConflict: "user_id,product_id" }
     );
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else toast({ title: "Added to cart", description: `${product?.name} added to your cart.` });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      queryClient.invalidateQueries({ queryKey: ["cart-count"] });
+      toast({
+        title: "🛒 Added to cart!",
+        description: `${quantity} × ${product?.name} added to your cart.`,
+      });
+    }
   };
 
   const addToWishlist = async () => {
@@ -64,7 +94,7 @@ export default function ProductDetail() {
       { onConflict: "user_id,product_id" }
     );
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else toast({ title: "Added to wishlist" });
+    else toast({ title: "❤️ Added to wishlist" });
   };
 
   if (isLoading) {
@@ -85,6 +115,7 @@ export default function ProductDetail() {
   if (!product) return <div className="py-20 text-center text-muted-foreground">Product not found.</div>;
 
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
+  const userAlreadyReviewed = reviews?.some((r) => r.user_id === user?.id);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -154,20 +185,50 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* Reviews */}
+      {/* Reviews Section */}
       <section className="mt-16">
         <h2 className="font-display text-2xl font-bold">Customer Reviews</h2>
+
+        {/* Review Form */}
+        {user && !userAlreadyReviewed && (
+          <div className="mt-6 rounded-lg border border-border p-6">
+            <h3 className="font-semibold">Write a Review</h3>
+            <div className="mt-3 flex items-center gap-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <button key={i} onClick={() => setReviewRating(i + 1)} className="p-0.5">
+                  <Star className={`h-6 w-6 transition-colors ${i < reviewRating ? "fill-primary text-primary" : "text-muted-foreground hover:text-primary/50"}`} />
+                </button>
+              ))}
+            </div>
+            <Textarea
+              placeholder="Share your thoughts about this product..."
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              className="mt-3"
+              rows={3}
+            />
+            <Button onClick={() => submitReview.mutate()} disabled={submitReview.isPending} className="mt-3">
+              {submitReview.isPending ? "Submitting..." : "Submit Review"}
+            </Button>
+          </div>
+        )}
+
         {reviews?.length === 0 ? (
           <p className="mt-4 text-muted-foreground">No reviews yet. Be the first to review this product!</p>
         ) : (
           <div className="mt-6 space-y-4">
             {reviews?.map((review) => (
               <div key={review.id} className="rounded-lg border border-border p-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex">{Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < review.rating ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-                  ))}</div>
-                  <span className="text-sm font-medium">{(review as any).profiles?.full_name || "Anonymous"}</span>
+                <div className="flex items-center gap-3">
+                  {(review as any).profiles?.avatar_url && (
+                    <img src={(review as any).profiles.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                  )}
+                  <div className="flex items-center gap-2">
+                    <div className="flex">{Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className={`h-4 w-4 ${i < review.rating ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                    ))}</div>
+                    <span className="text-sm font-medium">{(review as any).profiles?.full_name || "Anonymous"}</span>
+                  </div>
                 </div>
                 {review.comment && <p className="mt-2 text-sm text-muted-foreground">{review.comment}</p>}
               </div>

@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +20,19 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { data: cartCount } = useQuery({
+    queryKey: ["cart-count", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cart_items")
+        .select("quantity")
+        .eq("user_id", user!.id);
+      if (error) return 0;
+      return data.reduce((sum, item) => sum + item.quantity, 0);
+    },
+    enabled: !!user,
+  });
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -29,36 +44,23 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
           <span className="text-primary">NOIR</span>
           <span className="text-foreground">STORE</span>
         </Link>
 
-        {/* Desktop Nav Links */}
         <div className="hidden items-center gap-6 md:flex">
-          <Link to="/products" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            Shop
-          </Link>
-          <Link to="/categories" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            Categories
-          </Link>
+          <Link to="/products" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Shop</Link>
+          <Link to="/categories" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Categories</Link>
         </div>
 
-        {/* Search */}
         <form onSubmit={handleSearch} className="hidden flex-1 max-w-md md:flex">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-secondary border-0"
-            />
+            <Input placeholder="Search products..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-secondary border-0" />
           </div>
         </form>
 
-        {/* Actions */}
         <div className="flex items-center gap-2">
           {user ? (
             <>
@@ -66,7 +68,14 @@ export default function Navbar() {
                 <Link to="/wishlist"><Heart className="h-5 w-5" /></Link>
               </Button>
               <Button variant="ghost" size="icon" asChild className="relative">
-                <Link to="/cart"><ShoppingCart className="h-5 w-5" /></Link>
+                <Link to="/cart">
+                  <ShoppingCart className="h-5 w-5" />
+                  {(cartCount ?? 0) > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                      {cartCount! > 99 ? "99+" : cartCount}
+                    </span>
+                  )}
+                </Link>
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -100,7 +109,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="border-t border-border p-4 md:hidden">
           <form onSubmit={handleSearch} className="mb-4">
