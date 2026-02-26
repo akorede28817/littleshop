@@ -36,13 +36,21 @@ export default function ProductDetail() {
   const { data: reviews } = useQuery({
     queryKey: ["reviews", id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: reviewData, error } = await supabase
         .from("reviews")
-        .select("*, profiles:user_id(full_name, avatar_url)")
+        .select("*")
         .eq("product_id", id!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+
+      // Fetch profiles separately since there's no FK
+      const userIds = [...new Set(reviewData.map((r) => r.user_id))];
+      const { data: profiles } = userIds.length
+        ? await supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds)
+        : { data: [] };
+
+      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p] as const));
+      return reviewData.map((r) => ({ ...r, profile: profileMap.get(r.user_id) || null }));
     },
     enabled: !!id,
   });
@@ -220,14 +228,14 @@ export default function ProductDetail() {
             {reviews?.map((review) => (
               <div key={review.id} className="rounded-lg border border-border p-4">
                 <div className="flex items-center gap-3">
-                  {(review as any).profiles?.avatar_url && (
-                    <img src={(review as any).profiles.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                  {review.profile?.avatar_url && (
+                    <img src={review.profile.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
                   )}
                   <div className="flex items-center gap-2">
                     <div className="flex">{Array.from({ length: 5 }).map((_, i) => (
                       <Star key={i} className={`h-4 w-4 ${i < review.rating ? "fill-primary text-primary" : "text-muted-foreground"}`} />
                     ))}</div>
-                    <span className="text-sm font-medium">{(review as any).profiles?.full_name || "Anonymous"}</span>
+                    <span className="text-sm font-medium">{review.profile?.full_name || "Anonymous"}</span>
                   </div>
                 </div>
                 {review.comment && <p className="mt-2 text-sm text-muted-foreground">{review.comment}</p>}

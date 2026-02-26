@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Package } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-500/20 text-yellow-400",
@@ -44,7 +45,8 @@ export default function Orders() {
   return (
     <div className="space-y-4">
       {orders.map((order) => (
-        <Card key={order.id}>
+        <Link to={`/orders/${order.id}`} key={order.id} className="block transition-transform hover:scale-[1.01]">
+        <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -70,6 +72,7 @@ export default function Orders() {
             </div>
           </CardContent>
         </Card>
+        </Link>
       ))}
     </div>
   );
