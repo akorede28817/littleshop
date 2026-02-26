@@ -17,6 +17,7 @@ import Checkout from "./pages/Checkout";
 import Wishlist from "./pages/Wishlist";
 import Account from "./pages/Account";
 import Orders from "./pages/Orders";
+import OrderDetail from "./pages/OrderDetail";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/account" element={<Account />}>
                 <Route path="orders" element={<Orders />} />
               </Route>
+              <Route path="/orders/:id" element={<OrderDetail />} />
             </Route>
 
             {/* Admin routes */}
