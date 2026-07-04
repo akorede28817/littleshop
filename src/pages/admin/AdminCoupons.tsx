@@ -110,7 +110,7 @@ export default function AdminCoupons() {
               {coupons?.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-mono font-bold">{c.code}</TableCell>
-                  <TableCell>{c.discount_type === "percentage" ? `${c.discount_value}%` : `$${Number(c.discount_value).toFixed(2)}`}</TableCell>
+                  <TableCell>{c.discount_type === "percentage" ? `${c.discount_value}%` : `₦{Number(c.discount_value).toFixed(2)}`}</TableCell>
                   <TableCell>{c.current_uses}{c.max_uses ? `/${c.max_uses}` : ""}</TableCell>
                   <TableCell>{c.is_active ? "✓" : "✗"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{c.expires_at ? new Date(c.expires_at).toLocaleDateString() : "—"}</TableCell>
