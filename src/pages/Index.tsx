@@ -62,10 +62,10 @@ export default function Index() {
         <div className="container relative mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <h1 className="font-display text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
-              Discover <span className="text-primary">Premium</span> Products
+              Quality <span className="text-primary">Kampala & Ankara</span> Fabrics
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
-              Curated selection of high-quality goods, designed to elevate your everyday experience.
+              Sultansammy Stores — Quality Fabrics, Stress-Free Shopping. Shop premium fabrics and quality bags with fast, reliable delivery.
             </p>
             <div className="mt-8 flex justify-center gap-4">
               <Button asChild size="lg" className="font-semibold">
@@ -83,10 +83,10 @@ export default function Index() {
       <section className="border-y border-border bg-card py-8">
         <div className="container mx-auto grid grid-cols-2 gap-4 px-4 md:grid-cols-4">
           {[
-            { icon: Truck, title: "Free Shipping", desc: "On orders over $50" },
-            { icon: Shield, title: "Secure Payment", desc: "100% protected" },
-            { icon: RotateCcw, title: "Easy Returns", desc: "30-day returns" },
-            { icon: Star, title: "Top Quality", desc: "Premium materials" },
+            { icon: Truck, title: "Fast & Reliable Deliveries", desc: "Doorstep delivery, safely and on time" },
+            { icon: Shield, title: "Easy Transactions", desc: "Smooth, secure and stress-free" },
+            { icon: Star, title: "Quality Fabrics", desc: "Top-notch Kampala, Ankara & more" },
+            { icon: RotateCcw, title: "Trusted Service", desc: "Best prices, every time" },
           ].map(({ icon: Icon, title, desc }) => (
             <div key={title} className="flex items-center gap-3 text-sm">
               <Icon className="h-8 w-8 shrink-0 text-primary" />
@@ -177,7 +177,7 @@ export default function Index() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="font-display text-3xl font-bold">Ready to Elevate Your Style?</h2>
           <p className="mx-auto mt-2 max-w-lg opacity-80">
-            Join thousands of customers who trust Noir Store for premium quality products.
+            Join customers who trust Sultansammy Stores for quality Kampala, Ankara fabrics and bags.
           </p>
           <Button asChild variant="outline" size="lg" className="mt-6 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
             <Link to="/products">Start Shopping</Link>
@@ -205,10 +205,10 @@ function ProductCard({ product }: { product: any }) {
           <p className="text-xs text-muted-foreground">{product.categories?.name}</p>
           <h3 className="mt-1 font-semibold group-hover:text-primary transition-colors">{product.name}</h3>
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-lg font-bold text-primary">${Number(product.price).toFixed(2)}</span>
+            <span className="text-lg font-bold text-primary">₦{Number(product.price).toLocaleString()}</span>
             {product.compare_at_price && (
               <span className="text-sm text-muted-foreground line-through">
-                ${Number(product.compare_at_price).toFixed(2)}
+                ₦{Number(product.compare_at_price).toLocaleString()}
               </span>
             )}
           </div>

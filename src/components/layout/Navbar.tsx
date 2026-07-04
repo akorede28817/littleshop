@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import logo from "@/assets/sultansammy-logo.jpg.asset.json";
 import { ShoppingCart, Heart, User, Search, Menu, X, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,9 +45,9 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
-          <span className="text-primary">NOIR</span>
-          <span className="text-foreground">STORE</span>
+        <Link to="/" className="flex items-center gap-2 font-display font-bold tracking-tight">
+          <img src={logo.url} alt="Sultansammy Stores" className="h-10 w-10 rounded-full object-cover" />
+          <span className="hidden sm:inline text-lg"><span className="text-primary">Sultansammy</span> <span className="text-foreground">Stores</span></span>
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">

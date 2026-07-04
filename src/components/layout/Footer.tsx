@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import logo from "@/assets/sultansammy-logo.jpg.asset.json";
 
 export default function Footer() {
   return (
@@ -6,11 +7,14 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 md:grid-cols-4">
           <div>
-            <h3 className="font-display text-lg font-bold">
-              <span className="text-primary">NOIR</span> STORE
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Premium products with exceptional quality and style.
+            <div className="flex items-center gap-2">
+              <img src={logo.url} alt="Sultansammy Stores" className="h-10 w-10 rounded-full object-cover" />
+              <h3 className="font-display text-lg font-bold">
+                <span className="text-primary">Sultansammy</span> Stores
+              </h3>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Quality Fabrics, Stress-Free Shopping. Premium Kampala & Ankara fabrics and quality bags.
             </p>
           </div>
           <div>
@@ -29,15 +33,15 @@ export default function Footer() {
             </div>
           </div>
           <div>
-            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider">Support</h4>
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider">Contact Us</h4>
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span>help@noirstore.com</span>
-              <span>1-800-NOIR</span>
+              <span>08027853427</span>
+              <span>Fast & reliable deliveries nationwide.</span>
             </div>
           </div>
         </div>
         <div className="mt-8 border-t border-border pt-6 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Noir Store. All rights reserved.
+          © {new Date().getFullYear()} Sultansammy Stores. All rights reserved.
         </div>
       </div>
     </footer>
