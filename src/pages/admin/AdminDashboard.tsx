@@ -41,7 +41,7 @@ export default function AdminDashboard() {
     { label: "Products", value: stats?.products ?? 0, icon: Package, color: "text-blue-400" },
     { label: "Orders", value: stats?.orders ?? 0, icon: ShoppingBag, color: "text-green-400" },
     { label: "Users", value: stats?.users ?? 0, icon: Users, color: "text-purple-400" },
-    { label: "Revenue", value: `$${(stats?.revenue ?? 0).toFixed(2)}`, icon: DollarSign, color: "text-primary" },
+    { label: "Revenue", value: `₦${(stats?.revenue ?? 0).toFixed(2)}`, icon: DollarSign, color: "text-primary" },
   ];
 
   return (
