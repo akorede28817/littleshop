@@ -19,6 +19,7 @@ import Account from "./pages/Account";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import Auth from "./pages/Auth";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -51,6 +52,7 @@ const App = () => (
                 <Route path="orders" element={<Orders />} />
               </Route>
               <Route path="/orders/:id" element={<OrderDetail />} />
+              <Route path="/contact" element={<Contact />} />
             </Route>
 
             {/* Admin routes */}
