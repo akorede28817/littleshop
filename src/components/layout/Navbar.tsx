@@ -53,6 +53,7 @@ export default function Navbar() {
         <div className="hidden items-center gap-6 md:flex">
           <Link to="/products" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Shop</Link>
           <Link to="/categories" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Categories</Link>
+          <Link to="/contact" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Contact</Link>
         </div>
 
         <form onSubmit={handleSearch} className="hidden flex-1 max-w-md md:flex">
@@ -121,6 +122,7 @@ export default function Navbar() {
           <div className="flex flex-col gap-2">
             <Link to="/products" className="py-2 text-sm" onClick={() => setMobileMenuOpen(false)}>Shop</Link>
             <Link to="/categories" className="py-2 text-sm" onClick={() => setMobileMenuOpen(false)}>Categories</Link>
+            <Link to="/contact" className="py-2 text-sm" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
           </div>
         </div>
       )}

@@ -35,7 +35,9 @@ export default function Footer() {
           <div>
             <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider">Contact Us</h4>
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span>08027853427</span>
+              <a href="tel:08027853427" className="hover:text-foreground">Call: 08027853427</a>
+              <a href="https://wa.me/2348027853427" target="_blank" rel="noreferrer" className="hover:text-foreground">WhatsApp Chat</a>
+              <Link to="/contact" className="hover:text-foreground">Contact Page</Link>
               <span>Fast & reliable deliveries nationwide.</span>
             </div>
           </div>
